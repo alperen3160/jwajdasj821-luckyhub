@@ -1,238 +1,22 @@
 --[[
-    Premium Drawing API UI Library
-    Inspired by "juju" aesthetic.
-    Features: Proxy Drawing, Tweening, Signal Events, Full Element Suite.
+    UI Library: Juju Private Theme (CoreGui Universal Edition)
+    Optimized for GitHub remote execution.
+    100% Universal: Works on Solara, Wave, Delta, Celery, etc.
 ]]
-
-repeat task.wait() until game:IsLoaded()
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local Workspace = game:GetService("Workspace")
-local Camera = Workspace.CurrentCamera
+local Players = game:GetService("Players")
 
-local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-
--- > ( Signal Library )
-local Signal = {}
-Signal.__index = Signal
-function Signal.new()
-    return setmetatable({ _callbacks = {} }, Signal)
-end
-function Signal:Connect(callback)
-    local connection = {
-        _callback = callback,
-        Disconnect = function(self)
-            for i, v in ipairs(self.signal._callbacks) do
-                if v == self._callback then
-                    table.remove(self.signal._callbacks, i)
-                    break
-                end
-            end
-        end,
-        signal = self
-    }
-    table.insert(self._callbacks, callback)
-    return connection
-end
-function Signal:Fire(...)
-    for _, callback in ipairs(self._callbacks) do
-        task.spawn(callback, ...)
-    end
-end
-
--- > ( Tween Library for Drawing API )
-local CustomTween = {}
-local ActiveTweens = {}
-local EasingStyles = {
-    Linear = function(t) return t end,
-    Quad = function(t) return t * t end,
-    Exponential = function(t) return t == 1 and 1 or 1 - math.pow(2, -10 * t) end,
-    Circular = function(t) return math.sqrt(1 - math.pow(t - 1, 2)) end
-}
-
-function CustomTween.Tween(object, properties, style, duration)
-    local start_time = os.clock()
-    local initial_values = {}
-    local tween_funcs = {}
-
-    for prop, val in pairs(properties) do
-        initial_values[prop] = object[prop]
-        if typeof(val) == "Color3" then
-            tween_funcs[prop] = function(t)
-                object[prop] = initial_values[prop]:Lerp(val, t)
-            end
-        elseif typeof(val) == "Vector2" then
-            tween_funcs[prop] = function(t)
-                object[prop] = initial_values[prop]:Lerp(val, t)
-            end
-        elseif typeof(val) == "number" then
-            tween_funcs[prop] = function(t)
-                object[prop] = initial_values[prop] + (val - initial_values[prop]) * t
-            end
-        end
-    end
-
-    local connection
-    connection = RunService.RenderStepped:Connect(function()
-        local elapsed = os.clock() - start_time
-        local progress = math.clamp(elapsed / duration, 0, 1)
-        local eased = EasingStyles[style](progress)
-
-        for prop, func in pairs(tween_funcs) do
-            func(eased)
-        end
-
-        if progress >= 1 then
-            connection:Disconnect()
-            for prop, val in pairs(properties) do
-                object[prop] = val -- Ensure final value is exact
-            end
-        end
-    end)
-end
-
--- > ( Base64 Assets - Recreated for structural integrity )
-local Assets = {
-    Pixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAAYdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMvu8A7YAAAC2ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEAAAAFoAAABphwQAAQAAAGoAAAAAAAAA8nYBAOgDAADydgEA6AMAAFBhaW50Lk5FVCA1LjEuMgADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlAAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAACOO8FX0xe8TgAAAAxJREFUGFdj+P//PwAF/gL+pzWBhAAAAABJRU5ErkJggg==",
-    Gear = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAMAAAC67D+PAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURf///wAAAFXC034AAAACdFJOU/8A5bcwSgAAAAlwSFlzAAAQKAAAECgBJz8A6wAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4y+7wDtgAAALZlWElmSUkqAAgAAAAFABoBBQABAAAASgAAABsBBQABAAAAUgAAACgBAwABAAAAAgAAADEBAgAQAAAAWgAAAGmHBAABAAAAagAAAAAAAAB3mgEA6AMAAHeaAQDoAwAAUGFpbnQuTkVUIDUuMS4yAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACUAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAAEyPNqYn0aVIAAAALElEQVQYV2NgBAIGCAmioQhIQACQCZaGYBAJoZGYSApgUhATYAiikJGRkREACr4AMZ+SUSoAAAAASUVORK5CYII=",
-}
-
-local function DecodeBase64(data)
-    local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    data = string.gsub(data, '[^'..b..'=]', '')
-    return (data:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r,f='',(b:find(x)-1)
-        for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
-        return r;
-    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-        if (#x ~= 8) then return '' end
-        local c=0
-        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
-        return string.char(c)
-    end))
-end
-
--- > ( Drawing Proxy Wrapper )
-local DrawingProxy = {}
-DrawingProxy.__index = DrawingProxy
-
-function DrawingProxy.new(class, properties)
-    local proxy = setmetatable({
-        Object = Drawing.new(class),
-        Position = UDim2.new(0, 0, 0, 0),
-        Size = class == "Text" and 12 or UDim2.new(0, 0, 0, 0),
-        RealPosition = Vector2.new(0, 0),
-        RealSize = class == "Text" and 12 or Vector2.new(0, 0),
-        Children = {},
-        Parent = nil,
-        Visible = false,
-        IsRendering = false,
-    }, DrawingProxy)
-
-    local zIndex = properties.ZIndex or 20
-    properties.ZIndex = zIndex + 20
-
-    for prop, val in pairs(properties) do
-        proxy[prop] = val
-    end
-
-    return proxy
-end
-
-function DrawingProxy:UpdatePosition()
-    if self.Parent then
-        local parentPos = self.Parent.RealPosition
-        local parentSize = self.Parent.RealSize
-        self.RealPosition = Vector2.new(
-            (parentPos.X + (type(parentSize) == "number" and 0 or parentSize.X) * self.Position.X.Scale) + self.Position.X.Offset,
-            (parentPos.Y + (type(parentSize) == "number" and 0 or parentSize.Y) * self.Position.Y.Scale) + self.Position.Y.Offset
-        )
-    else
-        self.RealPosition = Vector2.new(self.Position.X.Offset, self.Position.Y.Offset)
-    end
-    self.Object.Position = self.RealPosition
-
-    for _, child in ipairs(self.Children) do
-        child:UpdatePosition()
-    end
-end
-
-function DrawingProxy:UpdateSize()
-    if typeof(self.Size) == "number" then
-        self.RealSize = self.Size
-        self.Object.Size = self.RealSize
-        return
-    end
-
-    if self.Parent then
-        local parentSize = self.Parent.RealSize
-        self.RealSize = Vector2.new(
-            (type(parentSize) == "number" and 0 or parentSize.X) * self.Size.X.Scale + self.Size.X.Offset,
-            (type(parentSize) == "number" and 0 or parentSize.Y) * self.Size.Y.Scale + self.Size.Y.Offset
-        )
-    else
-        self.RealSize = Vector2.new(self.Size.X.Offset, self.Size.Y.Offset)
-    end
-    self.Object.Size = self.RealSize
-
-    for _, child in ipairs(self.Children) do
-        child:UpdateSize()
-        child:UpdatePosition()
-    end
-end
-
-function DrawingProxy:UpdateVisibility()
-    if self.Parent and not self.Parent.IsRendering then
-        self.IsRendering = false
-        self.Object.Visible = false
-    else
-        self.Object.Visible = self.Visible
-        self.IsRendering = self.Visible
-    end
-
-    for _, child in ipairs(self.Children) do
-        child:UpdateVisibility()
-    end
-end
-
-function DrawingProxy:__newindex(prop, val)
-    if prop == "Position" then
-        rawset(self, "Position", val)
-        self:UpdatePosition()
-    elseif prop == "Size" then
-        rawset(self, "Size", val)
-        self:UpdateSize()
-    elseif prop == "Parent" then
-        rawset(self, "Parent", val)
-        if val then table.insert(val.Children, self) end
-        self:UpdatePosition()
-        self:UpdateSize()
-        self:UpdateVisibility()
-    elseif prop == "Visible" then
-        rawset(self, "Visible", val)
-        self:UpdateVisibility()
-    else
-        self.Object[prop] = val
-    end
-end
-
-function DrawingProxy:__index(prop)
-    if DrawingProxy[prop] then
-        return DrawingProxy[prop]
-    end
-    return self.Object[prop]
-end
-
-function DrawingProxy:Destroy()
-    for _, child in ipairs(self.Children) do
-        child:Destroy()
-    end
-    self.Object:Remove()
-    self.Object = nil
+-- > ( Executor Protection & Container )
+local ParentContainer = nil
+if gethui then
+    ParentContainer = gethui()
+elseif syn and syn.protect_gui then
+    ParentContainer = game:GetService("CoreGui")
+else
+    ParentContainer = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
 end
 
 -- > ( UI Library Base )
@@ -244,728 +28,593 @@ local Library = {
         Accent = Color3.fromRGB(154, 213, 222),
         Text = Color3.fromRGB(200, 200, 200),
         DarkText = Color3.fromRGB(100, 100, 100),
-        Highlight = Color3.fromRGB(40, 45, 50)
     },
-    Windows = {},
     Flags = {},
-    InputBegan = Signal.new(),
-    InputEnded = Signal.new(),
-    MouseMoved = Signal.new()
+    Toggled = true
 }
 
--- Input Handling
-local IsDragging = false
-local DragOffset = Vector2.new(0, 0)
-local HoveredElements = {}
-local ActiveWindow = nil
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe then
-        Library.InputBegan:Fire(input)
+-- > ( Utility Functions )
+local function Create(className, properties)
+    local inst = Instance.new(className)
+    for k, v in pairs(properties) do
+        inst[k] = v
     end
-end)
+    return inst
+end
 
-UserInputService.InputEnded:Connect(function(input, gpe)
-    if not gpe then
-        Library.InputEnded:Fire(input)
+local function Tween(instance, properties, duration)
+    local tInfo = TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(instance, tInfo, properties)
+    tween:Play()
+    return tween
+end
+
+local function MakeDraggable(topbarobject, object)
+    local Dragging = nil
+    local DragInput = nil
+    local DragStart = nil
+    local StartPosition = nil
+
+    local function Update(input)
+        local Delta = input.Position - DragStart
+        local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        Tween(object, {Position = pos}, 0.1)
     end
-end)
 
-UserInputService.InputChanged:Connect(function(input, gpe)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        Library.MouseMoved:Fire(input.Position)
-    end
-end)
+    topbarobject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true
+            DragStart = input.Position
+            StartPosition = object.Position
 
--- > ( Library Functions )
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    Dragging = false
+                end
+            end)
+        end
+    end)
 
+    topbarobject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            DragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then
+            Update(input)
+        end
+    end)
+end
+
+-- > ( Core Window Creation )
 function Library:CreateWindow(options)
     local Window = {
         Name = options.Name or "juju private",
-        Size = options.Size or UDim2.new(0, 600, 0, 450),
-        Groups = {},
-        ActiveTab = nil,
-        IsOpen = true
+        Tabs = {},
+        ActiveTab = nil
     }
 
-    local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local StartPos = UDim2.new(0, ScreenCenter.X - 300, 0, ScreenCenter.Y - 225)
+    local ScreenGui = Create("ScreenGui", {
+        Name = "JujuUI",
+        Parent = ParentContainer,
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+        ZIndexBehavior = Enum.ZIndexBehavior.Global
+    })
+    self.Gui = ScreenGui
 
-    -- Main Frame
-    Window.MainFrame = DrawingProxy.new("Image", {
-        Position = StartPos,
-        Size = Window.Size,
-        Color = self.Colors.Background,
-        Data = DecodeBase64(Assets.Pixel),
-        Visible = true,
-        Transparency = 1,
-        Rounding = 4
+    -- Insert toggle
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if not gpe and input.KeyCode == Enum.KeyCode.Insert then
+            self.Toggled = not self.Toggled
+            ScreenGui.Enabled = self.Toggled
+        end
+    end)
+
+    local MainFrame = Create("Frame", {
+        Name = "MainFrame",
+        Parent = ScreenGui,
+        BackgroundColor3 = self.Colors.Border, -- Acts as outline
+        Position = UDim2.new(0.5, -300, 0.5, -225),
+        Size = UDim2.new(0, 600, 0, 450),
+        BorderSizePixel = 0
     })
 
-    -- Inner Frame (Sidebar + Content area)
-    Window.InnerFrame = DrawingProxy.new("Image", {
-        Parent = Window.MainFrame,
+    local InnerFrame = Create("Frame", {
+        Name = "InnerFrame",
+        Parent = MainFrame,
+        BackgroundColor3 = self.Colors.Background,
         Position = UDim2.new(0, 1, 0, 1),
         Size = UDim2.new(1, -2, 1, -2),
-        Color = self.Colors.Section,
-        Data = DecodeBase64(Assets.Pixel),
-        Visible = true,
-        Transparency = 1,
-        Rounding = 4
+        BorderSizePixel = 0
     })
 
-    -- Logo & Name
-    Window.LogoText = DrawingProxy.new("Text", {
-        Parent = Window.InnerFrame,
-        Position = UDim2.new(0, 20, 0, 20),
-        Text = string.split(Window.Name, " ")[1] or "juju",
-        Color = self.Colors.Text,
-        Size = 16,
-        Font = 1,
-        Visible = true
+    -- Dragging Area
+    local DragHitbox = Create("Frame", {
+        Name = "DragHitbox",
+        Parent = InnerFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 30),
+        ZIndex = 50
     })
-    
-    Window.VersionText = DrawingProxy.new("Text", {
-        Parent = Window.InnerFrame,
-        Position = UDim2.new(0, 20, 0, 36),
-        Text = string.split(Window.Name, " ")[2] or "private",
-        Color = self.Colors.Accent,
-        Size = 14,
-        Font = 1,
-        Visible = true
+    MakeDraggable(DragHitbox, MainFrame)
+
+    -- Sidebar
+    local Sidebar = Create("Frame", {
+        Name = "Sidebar",
+        Parent = InnerFrame,
+        BackgroundColor3 = self.Colors.Background,
+        Size = UDim2.new(0, 120, 1, 0),
+        BorderSizePixel = 0
     })
 
-    -- Sidebar Divider
-    Window.SidebarDivider = DrawingProxy.new("Square", {
-        Parent = Window.InnerFrame,
-        Position = UDim2.new(0, 120, 0, 0),
+    local SidebarLine = Create("Frame", {
+        Name = "SidebarLine",
+        Parent = Sidebar,
+        BackgroundColor3 = self.Colors.Border,
+        Position = UDim2.new(1, -1, 0, 0),
         Size = UDim2.new(0, 1, 1, 0),
-        Color = self.Colors.Border,
-        Filled = true,
-        Visible = true
+        BorderSizePixel = 0
     })
 
-    -- Content Area
-    Window.ContentArea = DrawingProxy.new("Square", {
-        Parent = Window.InnerFrame,
-        Position = UDim2.new(0, 121, 0, 0),
-        Size = UDim2.new(1, -121, 1, 0),
-        Color = self.Colors.Background,
-        Filled = true,
-        Visible = true
+    -- Logo
+    local LogoContainer = Create("Frame", {
+        Parent = Sidebar,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 15),
+        Size = UDim2.new(1, -15, 0, 40)
     })
 
-    -- Active Tab Line (The blue line on the left of tabs)
-    Window.TabLine = DrawingProxy.new("Square", {
-        Parent = Window.InnerFrame,
-        Position = UDim2.new(0, 0, 0, 0),
+    local NameText = Create("TextLabel", {
+        Parent = LogoContainer,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 16),
+        Font = Enum.Font.RobotoMono,
+        Text = string.split(Window.Name, " ")[1] or "juju",
+        TextColor3 = self.Colors.Text,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    local SubText = Create("TextLabel", {
+        Parent = LogoContainer,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 14),
+        Font = Enum.Font.RobotoMono,
+        Text = string.split(Window.Name, " ")[2] or "private",
+        TextColor3 = self.Colors.Accent,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    local TabContainer = Create("ScrollingFrame", {
+        Name = "TabContainer",
+        Parent = Sidebar,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 75),
+        Size = UDim2.new(1, -1, 1, -85),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness = 0,
+        BorderSizePixel = 0
+    })
+
+    local TabListLayout = Create("UIListLayout", {
+        Parent = TabContainer,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 2)
+    })
+
+    local ActiveTabLine = Create("Frame", {
+        Parent = Sidebar,
+        BackgroundColor3 = self.Colors.Accent,
         Size = UDim2.new(0, 2, 0, 14),
-        Color = self.Colors.Accent,
-        Filled = true,
-        Visible = false
+        Visible = false,
+        BorderSizePixel = 0
     })
 
-    -- Dragging Logic
-    Library.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and Window.IsOpen then
-            local pos = UserInputService:GetMouseLocation()
-            local framePos = Window.MainFrame.RealPosition
-            local frameSize = Window.MainFrame.RealSize
+    local ContentContainer = Create("Frame", {
+        Name = "ContentContainer",
+        Parent = InnerFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 121, 0, 0),
+        Size = UDim2.new(1, -121, 1, 0)
+    })
 
-            -- Drag via top area or empty space
-            if pos.X >= framePos.X and pos.X <= framePos.X + frameSize.X and pos.Y >= framePos.Y and pos.Y <= framePos.Y + 30 then
-                IsDragging = true
-                DragOffset = Vector2.new(pos.X - framePos.X, pos.Y - framePos.Y)
-            end
-        end
-    end)
+    function Window:CreateGroup(groupName)
+        local Group = {Name = groupName}
 
-    Library.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            IsDragging = false
-        end
-    end)
+        Create("TextLabel", {
+            Parent = TabContainer,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 25),
+            Font = Enum.Font.RobotoMono,
+            Text = "  " .. groupName,
+            TextColor3 = Library.Colors.Accent,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
 
-    Library.MouseMoved:Connect(function(pos)
-        if IsDragging then
-            Window.MainFrame.Position = UDim2.new(0, pos.X - DragOffset.X, 0, pos.Y - DragOffset.Y)
-        end
-    end)
-
-    local currentGroupY = 75
-
-    function Window:CreateGroup(name)
-        local Group = {
-            Name = name,
-            Tabs = {},
-            Label = DrawingProxy.new("Text", {
-                Parent = self.InnerFrame,
-                Position = UDim2.new(0, 15, 0, currentGroupY),
-                Text = name,
-                Color = Library.Colors.Accent,
-                Size = 13,
-                Font = 1,
-                Visible = true
-            }),
-            Divider = DrawingProxy.new("Square", {
-                Parent = self.InnerFrame,
-                Position = UDim2.new(0, 15, 0, currentGroupY + 16),
-                Size = UDim2.new(0, 90, 0, 1),
-                Color = Library.Colors.Accent,
-                Filled = true,
-                Transparency = 0.3,
-                Visible = true
-            })
-        }
-        currentGroupY = currentGroupY + 25
+        local DivFrame = Create("Frame", {
+            Parent = TabContainer,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 5)
+        })
+        Create("Frame", {
+            Parent = DivFrame,
+            BackgroundColor3 = Library.Colors.Border,
+            Position = UDim2.new(0, 10, 0.5, 0),
+            Size = UDim2.new(1, -30, 0, 1),
+            BorderSizePixel = 0
+        })
 
         function Group:CreateTab(tabName)
-            local Tab = {
-                Name = tabName,
-                Sections = {},
-                Container = DrawingProxy.new("Square", {
-                    Parent = Window.ContentArea,
-                    Position = UDim2.new(0, 10, 0, 10),
-                    Size = UDim2.new(1, -20, 1, -20),
-                    Transparency = 0, -- Invisible container
-                    Visible = false
-                }),
-                Button = DrawingProxy.new("Text", {
-                    Parent = Window.InnerFrame,
-                    Position = UDim2.new(0, 15, 0, currentGroupY),
-                    Text = tabName,
-                    Color = Library.Colors.DarkText,
-                    Size = 13,
-                    Font = 1,
-                    Visible = true
-                }),
-                Hitbox = DrawingProxy.new("Square", {
-                    Parent = Window.InnerFrame,
-                    Position = UDim2.new(0, 10, 0, currentGroupY),
-                    Size = UDim2.new(0, 100, 0, 15),
-                    Transparency = 0,
-                    Visible = true
-                })
-            }
-            currentGroupY = currentGroupY + 18
+            local Tab = {Name = tabName, Sections = {}}
 
-            -- Tab Switching Logic
-            Library.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and Window.IsOpen then
-                    local pos = UserInputService:GetMouseLocation()
-                    local hp = Tab.Hitbox.RealPosition
-                    local hs = Tab.Hitbox.RealSize
-                    
-                    if pos.X >= hp.X and pos.X <= hp.X + hs.X and pos.Y >= hp.Y and pos.Y <= hp.Y + hs.Y then
-                        -- Hide old tab
-                        if Window.ActiveTab then
-                            Window.ActiveTab.Container.Visible = false
-                            Window.ActiveTab.Button.Color = Library.Colors.DarkText
-                            CustomTween.Tween(Window.ActiveTab.Button, {Position = UDim2.new(0, 15, 0, Window.ActiveTab.Button.Position.Y.Offset)}, "Exponential", 0.2)
-                        end
-                        
-                        -- Show new tab
-                        Window.ActiveTab = Tab
-                        Tab.Container.Visible = true
-                        Tab.Button.Color = Library.Colors.Text
-                        
-                        -- Animate active text and blue line
-                        CustomTween.Tween(Tab.Button, {Position = UDim2.new(0, 20, 0, Tab.Button.Position.Y.Offset)}, "Exponential", 0.2)
-                        Window.TabLine.Visible = true
-                        CustomTween.Tween(Window.TabLine, {Position = UDim2.new(0, 12, 0, Tab.Button.Position.Y.Offset + 1)}, "Exponential", 0.2)
-                    end
+            local TabBtn = Create("TextButton", {
+                Parent = TabContainer,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 0, 18),
+                Font = Enum.Font.RobotoMono,
+                Text = "   " .. tabName,
+                TextColor3 = Library.Colors.DarkText,
+                TextSize = 13,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                AutoButtonColor = false
+            })
+
+            local TabContent = Create("ScrollingFrame", {
+                Parent = ContentContainer,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                ScrollBarThickness = 0,
+                Visible = false
+            })
+
+            local LeftSide = Create("Frame", {
+                Parent = TabContent,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 10),
+                Size = UDim2.new(0.5, -15, 1, -20)
+            })
+            Create("UIListLayout", { Parent = LeftSide, Padding = UDim.new(0, 10) })
+
+            local RightSide = Create("Frame", {
+                Parent = TabContent,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0.5, 5, 0, 10),
+                Size = UDim2.new(0.5, -15, 1, -20)
+            })
+            Create("UIListLayout", { Parent = RightSide, Padding = UDim.new(0, 10) })
+
+            TabBtn.MouseButton1Click:Connect(function()
+                if Window.ActiveTab then
+                    Window.ActiveTab.Content.Visible = false
+                    Tween(Window.ActiveTab.Btn, {TextColor3 = Library.Colors.DarkText}, 0.15)
                 end
+                Window.ActiveTab = {Content = TabContent, Btn = TabBtn}
+                TabContent.Visible = true
+                Tween(TabBtn, {TextColor3 = Library.Colors.Text}, 0.15)
+
+                ActiveTabLine.Visible = true
+                Tween(ActiveTabLine, {Position = UDim2.new(0, 0, 0, TabBtn.AbsolutePosition.Y - Sidebar.AbsolutePosition.Y + 2)}, 0.2)
             end)
 
-            function Tab:CreateSection(sectionName, side)
-                side = side or "Left"
-                local xOffset = side == "Left" and 0 or 0.5
-                local xPixels = side == "Left" and 0 or 5
+            function Tab:CreateSection(secName, side)
+                local TargetSide = side == "Right" and RightSide or LeftSide
 
-                local Section = {
-                    Name = sectionName,
-                    Elements = {},
-                    CurrentY = 15,
-                    Border = DrawingProxy.new("Image", {
-                        Parent = self.Container,
-                        Position = UDim2.new(xOffset, xPixels, 0, 0),
-                        Size = UDim2.new(0.5, -5, 1, 0), -- Automatically scales height later
-                        Color = Library.Colors.Border,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Visible = true,
-                        Transparency = 1,
-                        Rounding = 4
-                    })
-                }
+                local SecBorder = Create("Frame", {
+                    Parent = TargetSide,
+                    BackgroundColor3 = Library.Colors.Border,
+                    Size = UDim2.new(1, 0, 0, 20), -- Updates dynamically
+                    BorderSizePixel = 0
+                })
 
-                Section.Inside = DrawingProxy.new("Image", {
-                    Parent = Section.Border,
+                local SecInner = Create("Frame", {
+                    Parent = SecBorder,
+                    BackgroundColor3 = Library.Colors.Section,
                     Position = UDim2.new(0, 1, 0, 1),
                     Size = UDim2.new(1, -2, 1, -2),
-                    Color = Library.Colors.Section,
-                    Data = DecodeBase64(Assets.Pixel),
-                    Visible = true,
-                    Transparency = 1,
-                    Rounding = 4
+                    BorderSizePixel = 0
                 })
 
-                -- Section Title Line
-                Section.TitleText = DrawingProxy.new("Text", {
-                    Parent = Section.Inside,
-                    Position = UDim2.new(0, 15, 0, -7),
-                    Text = sectionName,
-                    Color = Library.Colors.Accent,
-                    Size = 13,
-                    Font = 1,
-                    Visible = true
+                -- Label with lines
+                local TitleContainer = Create("Frame", {
+                    Parent = SecInner,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 10),
+                    Position = UDim2.new(0, 0, 0, -5)
                 })
 
-                local textWidth = Section.TitleText.Object.TextBounds.X
-
-                Section.Line1 = DrawingProxy.new("Square", {
-                    Parent = Section.Inside,
-                    Position = UDim2.new(0, 5, 0, 0),
-                    Size = UDim2.new(0, 8, 0, 1),
-                    Color = Library.Colors.Border,
-                    Filled = true,
-                    Visible = true
+                local SecTitle = Create("TextLabel", {
+                    Parent = TitleContainer,
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0, 15, 0, 0),
+                    Size = UDim2.new(0, 0, 1, 0),
+                    Font = Enum.Font.RobotoMono,
+                    Text = secName,
+                    TextColor3 = Library.Colors.Accent,
+                    TextSize = 12,
+                    AutomaticSize = Enum.AutomaticSize.X
                 })
 
-                Section.Line2 = DrawingProxy.new("Square", {
-                    Parent = Section.Inside,
-                    Position = UDim2.new(0, 15 + textWidth + 2, 0, 0),
-                    Size = UDim2.new(1, -(15 + textWidth + 7), 0, 1),
-                    Color = Library.Colors.Border,
-                    Filled = true,
-                    Visible = true
-                })
+                Create("Frame", { Parent = TitleContainer, BackgroundColor3 = Library.Colors.Border, Position = UDim2.new(0, 5, 0.5, 0), Size = UDim2.new(0, 8, 0, 1), BorderSizePixel = 0 })
+                
+                local LineRight = Create("Frame", { Parent = TitleContainer, BackgroundColor3 = Library.Colors.Border, Position = UDim2.new(0, 10, 0.5, 0), Size = UDim2.new(1, -15, 0, 1), BorderSizePixel = 0 })
+                SecTitle:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+                    LineRight.Position = UDim2.new(0, 15 + SecTitle.AbsoluteSize.X + 2, 0.5, 0)
+                    LineRight.Size = UDim2.new(1, -(15 + SecTitle.AbsoluteSize.X + 7), 0, 1)
+                end)
 
-                function Section:UpdateHeight()
-                    self.Border.Size = UDim2.new(0.5, -5, 0, self.CurrentY + 5)
+                local ItemContainer = Create("Frame", {
+                    Parent = SecInner,
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0, 0, 0, 15),
+                    Size = UDim2.new(1, 0, 1, -15)
+                })
+                local ItemLayout = Create("UIListLayout", { Parent = ItemContainer, Padding = UDim.new(0, 4) })
+
+                local function UpdateHeight()
+                    local h = ItemLayout.AbsoluteContentSize.Y + 25
+                    SecBorder.Size = UDim2.new(1, 0, 0, h)
                 end
+                ItemLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateHeight)
 
-                -- > Elements inside section
+                -- > Section Elements
+                local Section = {}
 
                 function Section:CreateToggle(options)
-                    local Toggle = {
-                        Name = options.Name,
-                        Flag = options.Flag or options.Name,
-                        State = options.Default or false,
-                        Callback = options.Callback or function() end
-                    }
-                    Library.Flags[Toggle.Flag] = Toggle.State
+                    local flag = options.Flag or options.Name
+                    Library.Flags[flag] = options.Default or false
 
-                    local ToggleBox = DrawingProxy.new("Image", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY),
-                        Size = UDim2.new(0, 12, 0, 12),
-                        Color = Library.Colors.Border,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 4,
-                        Visible = true,
-                        Transparency = 1
+                    local ToggleFrame = Create("TextButton", {
+                        Parent = ItemContainer,
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        Text = ""
                     })
 
-                    local ToggleInner = DrawingProxy.new("Image", {
-                        Parent = ToggleBox,
+                    local BoxBorder = Create("Frame", {
+                        Parent = ToggleFrame,
+                        BackgroundColor3 = Library.Colors.Border,
+                        Position = UDim2.new(0, 10, 0.5, -5),
+                        Size = UDim2.new(0, 10, 0, 10),
+                        BorderSizePixel = 0
+                    })
+
+                    local BoxInner = Create("Frame", {
+                        Parent = BoxBorder,
+                        BackgroundColor3 = Library.Flags[flag] and Library.Colors.Accent or Library.Colors.Background,
                         Position = UDim2.new(0, 1, 0, 1),
                         Size = UDim2.new(1, -2, 1, -2),
-                        Color = Toggle.State and Library.Colors.Accent or Library.Colors.Background,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 3,
-                        Visible = true,
-                        Transparency = 1
+                        BorderSizePixel = 0
                     })
 
-                    local ToggleText = DrawingProxy.new("Text", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 28, 0, self.CurrentY - 1),
-                        Text = Toggle.Name,
-                        Color = Toggle.State and Library.Colors.Text or Library.Colors.DarkText,
-                        Size = 13,
-                        Font = 1,
-                        Visible = true
+                    local Title = Create("TextLabel", {
+                        Parent = ToggleFrame,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 26, 0, 0),
+                        Size = UDim2.new(1, -26, 1, 0),
+                        Font = Enum.Font.RobotoMono,
+                        Text = options.Name,
+                        TextColor3 = Library.Flags[flag] and Library.Colors.Text or Library.Colors.DarkText,
+                        TextSize = 13,
+                        TextXAlignment = Enum.TextXAlignment.Left
                     })
 
-                    -- Optional Gear Icon
-                    if options.HasSettings then
-                        local GearIcon = DrawingProxy.new("Image", {
-                            Parent = self.Inside,
-                            Position = UDim2.new(1, -20, 0, self.CurrentY + 1),
-                            Size = UDim2.new(0, 10, 0, 10),
-                            Color = Library.Colors.DarkText,
-                            Data = DecodeBase64(Assets.Gear),
-                            Visible = true,
-                            Transparency = 1
-                        })
-                    end
-
-                    local Hitbox = DrawingProxy.new("Square", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY),
-                        Size = UDim2.new(1, -20, 0, 14),
-                        Transparency = 0,
-                        Visible = true
-                    })
-
-                    Library.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 and Window.IsOpen and Tab.Container.Visible then
-                            local pos = UserInputService:GetMouseLocation()
-                            local hp = Hitbox.RealPosition
-                            local hs = Hitbox.RealSize
-                            if pos.X >= hp.X and pos.X <= hp.X + hs.X and pos.Y >= hp.Y and pos.Y <= hp.Y + hs.Y then
-                                Toggle.State = not Toggle.State
-                                Library.Flags[Toggle.Flag] = Toggle.State
-                                
-                                CustomTween.Tween(ToggleInner, {Color = Toggle.State and Library.Colors.Accent or Library.Colors.Background}, "Circular", 0.15)
-                                CustomTween.Tween(ToggleText, {Color = Toggle.State and Library.Colors.Text or Library.Colors.DarkText}, "Circular", 0.15)
-                                
-                                Toggle.Callback(Toggle.State)
-                            end
-                        end
+                    ToggleFrame.MouseButton1Click:Connect(function()
+                        Library.Flags[flag] = not Library.Flags[flag]
+                        Tween(BoxInner, {BackgroundColor3 = Library.Flags[flag] and Library.Colors.Accent or Library.Colors.Background}, 0.15)
+                        Tween(Title, {TextColor3 = Library.Flags[flag] and Library.Colors.Text or Library.Colors.DarkText}, 0.15)
+                        if options.Callback then options.Callback(Library.Flags[flag]) end
                     end)
-
-                    self.CurrentY = self.CurrentY + 20
-                    self:UpdateHeight()
-                    return Toggle
                 end
 
                 function Section:CreateSlider(options)
-                    local Slider = {
-                        Name = options.Name,
-                        Flag = options.Flag or options.Name,
-                        Min = options.Min or 0,
-                        Max = options.Max or 100,
-                        Value = options.Default or 50,
-                        Suffix = options.Suffix or "",
-                        Callback = options.Callback or function() end
-                    }
-                    Library.Flags[Slider.Flag] = Slider.Value
+                    local flag = options.Flag or options.Name
+                    local min, max = options.Min or 0, options.Max or 100
+                    Library.Flags[flag] = options.Default or min
 
-                    local TitleText = DrawingProxy.new("Text", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY),
-                        Text = Slider.Name .. " | " .. tostring(Slider.Value) .. Slider.Suffix,
-                        Color = Library.Colors.Text,
-                        Size = 13,
-                        Font = 1,
-                        Visible = true
+                    local SliderFrame = Create("Frame", {
+                        Parent = ItemContainer,
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(1, 0, 0, 30)
                     })
 
-                    local SliderBg = DrawingProxy.new("Image", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY + 16),
+                    local Title = Create("TextLabel", {
+                        Parent = SliderFrame,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 10, 0, 0),
+                        Size = UDim2.new(1, -20, 0, 15),
+                        Font = Enum.Font.RobotoMono,
+                        Text = options.Name .. " | " .. tostring(Library.Flags[flag]) .. (options.Suffix or ""),
+                        TextColor3 = Library.Colors.Text,
+                        TextSize = 13,
+                        TextXAlignment = Enum.TextXAlignment.Left
+                    })
+
+                    local SlideBg = Create("TextButton", {
+                        Parent = SliderFrame,
+                        BackgroundColor3 = Library.Colors.Background,
+                        Position = UDim2.new(0, 10, 0, 18),
                         Size = UDim2.new(1, -20, 0, 6),
-                        Color = Library.Colors.Background,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 3,
-                        Visible = true,
-                        Transparency = 1
+                        Text = "",
+                        AutoButtonColor = false,
+                        BorderSizePixel = 0
                     })
 
-                    local SliderFill = DrawingProxy.new("Image", {
-                        Parent = SliderBg,
-                        Position = UDim2.new(0, 0, 0, 0),
-                        Size = UDim2.new(math.clamp((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1), 0, 1, 0),
-                        Color = Library.Colors.Accent,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 3,
-                        Visible = true,
-                        Transparency = 1
+                    local SlideFill = Create("Frame", {
+                        Parent = SlideBg,
+                        BackgroundColor3 = Library.Colors.Accent,
+                        Size = UDim2.new((Library.Flags[flag] - min) / (max - min), 0, 1, 0),
+                        BorderSizePixel = 0
                     })
 
-                    local Sliding = false
-
+                    local sliding = false
                     local function UpdateSlider(input)
-                        local pos = UserInputService:GetMouseLocation()
-                        local relX = math.clamp(pos.X - SliderBg.RealPosition.X, 0, SliderBg.RealSize.X)
-                        local percentage = relX / SliderBg.RealSize.X
-                        Slider.Value = math.floor(Slider.Min + (Slider.Max - Slider.Min) * percentage)
-                        Library.Flags[Slider.Flag] = Slider.Value
-
-                        TitleText.Text = Slider.Name .. " | " .. tostring(Slider.Value) .. Slider.Suffix
-                        SliderFill.Size = UDim2.new(percentage, 0, 1, 0)
-                        
-                        Slider.Callback(Slider.Value)
+                        local relX = math.clamp(input.Position.X - SlideBg.AbsolutePosition.X, 0, SlideBg.AbsoluteSize.X)
+                        local percent = relX / SlideBg.AbsoluteSize.X
+                        local value = math.floor(min + (max - min) * percent)
+                        Library.Flags[flag] = value
+                        Title.Text = options.Name .. " | " .. tostring(value) .. (options.Suffix or "")
+                        SlideFill.Size = UDim2.new(percent, 0, 1, 0)
+                        if options.Callback then options.Callback(value) end
                     end
 
-                    Library.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 and Window.IsOpen and Tab.Container.Visible then
-                            local pos = UserInputService:GetMouseLocation()
-                            local hp = SliderBg.RealPosition
-                            local hs = SliderBg.RealSize
-                            if pos.X >= hp.X and pos.X <= hp.X + hs.X and pos.Y >= hp.Y - 5 and pos.Y <= hp.Y + hs.Y + 5 then
-                                Sliding = true
-                                UpdateSlider(input)
-                            end
-                        end
-                    end)
-
-                    Library.InputEnded:Connect(function(input)
+                    SlideBg.InputBegan:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            Sliding = false
+                            sliding = true
+                            UpdateSlider(input)
                         end
                     end)
 
-                    Library.MouseMoved:Connect(function(pos)
-                        if Sliding then
-                            UpdateSlider()
-                        end
+                    UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
                     end)
 
-                    self.CurrentY = self.CurrentY + 30
-                    self:UpdateHeight()
-                    return Slider
+                    UserInputService.InputChanged:Connect(function(input)
+                        if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then UpdateSlider(input) end
+                    end)
                 end
 
                 function Section:CreateDropdown(options)
-                    local Dropdown = {
-                        Name = options.Name,
-                        Options = options.Options or {},
-                        Value = options.Default or options.Options[1] or "",
-                        Flag = options.Flag or options.Name,
-                        Callback = options.Callback or function() end,
-                        IsOpen = false
-                    }
-                    Library.Flags[Dropdown.Flag] = Dropdown.Value
+                    local flag = options.Flag or options.Name
+                    Library.Flags[flag] = options.Default or options.Options[1] or ""
 
-                    local TitleText = DrawingProxy.new("Text", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY),
-                        Text = Dropdown.Name,
-                        Color = Library.Colors.DarkText,
-                        Size = 13,
-                        Font = 1,
-                        Visible = true
+                    local DropFrame = Create("Frame", {
+                        Parent = ItemContainer,
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(1, 0, 0, 40)
                     })
 
-                    local DropBox = DrawingProxy.new("Image", {
-                        Parent = self.Inside,
-                        Position = UDim2.new(0, 10, 0, self.CurrentY + 16),
+                    Create("TextLabel", {
+                        Parent = DropFrame,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 10, 0, 0),
+                        Size = UDim2.new(1, -20, 0, 15),
+                        Font = Enum.Font.RobotoMono,
+                        Text = options.Name,
+                        TextColor3 = Library.Colors.DarkText,
+                        TextSize = 13,
+                        TextXAlignment = Enum.TextXAlignment.Left
+                    })
+
+                    local DropBtn = Create("TextButton", {
+                        Parent = DropFrame,
+                        BackgroundColor3 = Library.Colors.Border,
+                        Position = UDim2.new(0, 10, 0, 18),
                         Size = UDim2.new(1, -20, 0, 18),
-                        Color = Library.Colors.Border,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 3,
-                        Visible = true,
-                        Transparency = 1
+                        Text = "",
+                        BorderSizePixel = 0
                     })
 
-                    local DropInner = DrawingProxy.new("Image", {
-                        Parent = DropBox,
+                    local DropInner = Create("Frame", {
+                        Parent = DropBtn,
+                        BackgroundColor3 = Library.Colors.Background,
                         Position = UDim2.new(0, 1, 0, 1),
                         Size = UDim2.new(1, -2, 1, -2),
-                        Color = Library.Colors.Background,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 2,
-                        Visible = true,
-                        Transparency = 1
+                        BorderSizePixel = 0
                     })
 
-                    local ValueText = DrawingProxy.new("Text", {
+                    local CurrentVal = Create("TextLabel", {
                         Parent = DropInner,
-                        Position = UDim2.new(0, 5, 0, 2),
-                        Text = Dropdown.Value,
-                        Color = Library.Colors.Text,
-                        Size = 13,
-                        Font = 1,
-                        Visible = true
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 5, 0, 0),
+                        Size = UDim2.new(1, -10, 1, 0),
+                        Font = Enum.Font.RobotoMono,
+                        Text = Library.Flags[flag],
+                        TextColor3 = Library.Colors.Text,
+                        TextSize = 13,
+                        TextXAlignment = Enum.TextXAlignment.Left
                     })
 
-                    -- The dropdown list container (hidden by default)
-                    local ListBox = DrawingProxy.new("Image", {
-                        Parent = DropBox,
-                        Position = UDim2.new(0, 0, 1, 2),
-                        Size = UDim2.new(1, 0, 0, #Dropdown.Options * 16 + 4),
-                        Color = Library.Colors.Border,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 3,
+                    -- Dropdown List Container
+                    local ListFrame = Create("Frame", {
+                        Parent = ScreenGui, -- Parent to ScreenGui to bypass clipping
+                        BackgroundColor3 = Library.Colors.Border,
+                        Size = UDim2.new(0, DropBtn.AbsoluteSize.X, 0, #options.Options * 16 + 2),
                         Visible = false,
-                        Transparency = 1,
-                        ZIndex = 100
+                        ZIndex = 100,
+                        BorderSizePixel = 0
                     })
-
-                    local ListInner = DrawingProxy.new("Image", {
-                        Parent = ListBox,
+                    
+                    local ListInner = Create("Frame", {
+                        Parent = ListFrame,
+                        BackgroundColor3 = Library.Colors.Background,
                         Position = UDim2.new(0, 1, 0, 1),
                         Size = UDim2.new(1, -2, 1, -2),
-                        Color = Library.Colors.Background,
-                        Data = DecodeBase64(Assets.Pixel),
-                        Rounding = 2,
-                        Visible = true,
-                        Transparency = 1,
-                        ZIndex = 101
+                        ZIndex = 100,
+                        BorderSizePixel = 0
                     })
 
-                    local OptionDrawings = {}
+                    local ListLayout = Create("UIListLayout", { Parent = ListInner })
 
-                    local function PopulateList()
-                        for _, obj in ipairs(OptionDrawings) do
-                            obj.Text:Destroy()
-                            obj.Hitbox:Destroy()
-                        end
-                        OptionDrawings = {}
+                    for _, opt in ipairs(options.Options) do
+                        local OptBtn = Create("TextButton", {
+                            Parent = ListInner,
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, 0, 0, 16),
+                            Font = Enum.Font.RobotoMono,
+                            Text = "  " .. opt,
+                            TextColor3 = opt == Library.Flags[flag] and Library.Colors.Accent or Library.Colors.DarkText,
+                            TextSize = 13,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                            ZIndex = 101
+                        })
 
-                        for i, opt in ipairs(Dropdown.Options) do
-                            local optText = DrawingProxy.new("Text", {
-                                Parent = ListInner,
-                                Position = UDim2.new(0, 5, 0, 2 + (i - 1) * 16),
-                                Text = opt,
-                                Color = opt == Dropdown.Value and Library.Colors.Accent or Library.Colors.DarkText,
-                                Size = 13,
-                                Font = 1,
-                                Visible = true,
-                                ZIndex = 102
-                            })
+                        OptBtn.MouseButton1Click:Connect(function()
+                            Library.Flags[flag] = opt
+                            CurrentVal.Text = opt
+                            ListFrame.Visible = false
+                            
+                            -- Reset colors
+                            for _, v in ipairs(ListInner:GetChildren()) do
+                                if v:IsA("TextButton") then
+                                    v.TextColor3 = v.Text:match(opt) and Library.Colors.Accent or Library.Colors.DarkText
+                                end
+                            end
 
-                            local optHitbox = DrawingProxy.new("Square", {
-                                Parent = ListInner,
-                                Position = UDim2.new(0, 0, 0, (i - 1) * 16),
-                                Size = UDim2.new(1, 0, 0, 16),
-                                Transparency = 0,
-                                Visible = true,
-                                ZIndex = 103
-                            })
-
-                            table.insert(OptionDrawings, {Text = optText, Hitbox = optHitbox, Value = opt})
-                        end
-                        ListBox.Size = UDim2.new(1, 0, 0, #Dropdown.Options * 16 + 4)
+                            if options.Callback then options.Callback(opt) end
+                        end)
                     end
 
-                    PopulateList()
-
-                    Library.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 and Window.IsOpen and Tab.Container.Visible then
-                            local pos = UserInputService:GetMouseLocation()
-                            
-                            if Dropdown.IsOpen then
-                                -- Check clicks on options
-                                local clickedOption = false
-                                for _, opt in ipairs(OptionDrawings) do
-                                    local hp = opt.Hitbox.RealPosition
-                                    local hs = opt.Hitbox.RealSize
-                                    if pos.X >= hp.X and pos.X <= hp.X + hs.X and pos.Y >= hp.Y and pos.Y <= hp.Y + hs.Y then
-                                        Dropdown.Value = opt.Value
-                                        Library.Flags[Dropdown.Flag] = Dropdown.Value
-                                        ValueText.Text = Dropdown.Value
-                                        Dropdown.Callback(Dropdown.Value)
-                                        clickedOption = true
-                                        break
-                                    end
-                                end
-                                
-                                Dropdown.IsOpen = false
-                                ListBox.Visible = false
-                                if clickedOption then PopulateList() end
-                                return
-                            end
-
-                            local hp = DropBox.RealPosition
-                            local hs = DropBox.RealSize
-                            if pos.X >= hp.X and pos.X <= hp.X + hs.X and pos.Y >= hp.Y and pos.Y <= hp.Y + hs.Y then
-                                Dropdown.IsOpen = true
-                                PopulateList()
-                                ListBox.Visible = true
-                            end
+                    DropBtn.MouseButton1Click:Connect(function()
+                        if ListFrame.Visible then
+                            ListFrame.Visible = false
+                        else
+                            ListFrame.Position = UDim2.new(0, DropBtn.AbsolutePosition.X, 0, DropBtn.AbsolutePosition.Y + 20)
+                            ListFrame.Size = UDim2.new(0, DropBtn.AbsoluteSize.X, 0, #options.Options * 16 + 2)
+                            ListFrame.Visible = true
                         end
                     end)
-
-                    self.CurrentY = self.CurrentY + 40
-                    self:UpdateHeight()
-                    return Dropdown
                 end
 
                 return Section
             end
 
-            table.insert(self.Tabs, Tab)
+            -- If it's the first tab created, select it
+            if not Window.ActiveTab then
+                Window.ActiveTab = {Content = TabContent, Btn = TabBtn}
+                TabContent.Visible = true
+                Tween(TabBtn, {TextColor3 = Library.Colors.Text}, 0)
+                ActiveTabLine.Visible = true
+                task.delay(0.1, function()
+                    ActiveTabLine.Position = UDim2.new(0, 0, 0, TabBtn.AbsolutePosition.Y - Sidebar.AbsolutePosition.Y + 2)
+                end)
+            end
+
+            table.insert(Window.Tabs, Tab)
             return Tab
         end
 
-        table.insert(Window.Groups, Group)
         return Group
     end
 
-    -- Return the built window object
     return Window
 end
 
--- > ( Build the Specific UI from Screenshot )
-local MyWindow = Library:CreateWindow({Name = "juju private"})
-
--- Groups
-local MainGroup = MyWindow:CreateGroup("main")
-local VisualsGroup = MyWindow:CreateGroup("visuals")
-local MiscGroup = MyWindow:CreateGroup("misc.")
-
--- Tabs
-local RagebotTab = MainGroup:CreateTab("ragebot")
-MainGroup:CreateTab("legitbot")
-
-VisualsGroup:CreateTab("players")
-VisualsGroup:CreateTab("general")
-VisualsGroup:CreateTab("skins")
-
-MiscGroup:CreateTab("players")
-MiscGroup:CreateTab("configs")
-MiscGroup:CreateTab("addons")
-MiscGroup:CreateTab("shop")
-MiscGroup:CreateTab("main")
-
--- Sections in Ragebot (Matching image)
-local GeneralSec = RagebotTab:CreateSection("general", "Left")
-GeneralSec:CreateToggle({Name = "ragebot", Flag = "RagebotEnabled"})
-GeneralSec:CreateToggle({Name = "auto fire", Flag = "AutoFire", HasSettings = true})
-GeneralSec:CreateToggle({Name = "auto equip", Flag = "AutoEquip", HasSettings = true})
-GeneralSec:CreateToggle({Name = "spam resolver", Flag = "SpamResolver", HasSettings = true})
-GeneralSec:CreateDropdown({Name = "target hitbox", Options = {"head", "torso", "legs"}, Default = "head"})
-GeneralSec:CreateSlider({Name = "prediction | auto", Min = 0, Max = 100, Default = 15, Suffix = "ms"})
-GeneralSec:CreateSlider({Name = "shot delay | none", Min = 0, Max = 500, Default = 0, Suffix = "ms"})
-GeneralSec:CreateSlider({Name = "field of view | full", Min = 0, Max = 360, Default = 360})
-GeneralSec:CreateSlider({Name = "fire cooldown", Min = 0, Max = 50, Default = 5, Suffix = "ms"})
-GeneralSec:CreateToggle({Name = "target selection", HasSettings = true})
-
-local VisSec = RagebotTab:CreateSection("visualization", "Left")
-VisSec:CreateToggle({Name = "crosshair follow"})
-VisSec:CreateToggle({Name = "3d target circle", HasSettings = true})
-VisSec:CreateToggle({Name = "view target", HasSettings = true})
-VisSec:CreateToggle({Name = "face target"})
-VisSec:CreateToggle({Name = "show fov", HasSettings = true})
-VisSec:CreateToggle({Name = "tracer", HasSettings = true})
-
-local AntiSec = RagebotTab:CreateSection("anti", "Right")
-AntiSec:CreateToggle({Name = "sender rate value", HasSettings = true})
-AntiSec:CreateToggle({Name = "network desync"})
-AntiSec:CreateToggle({Name = "velocity desync", HasSettings = true})
-AntiSec:CreateToggle({Name = "fake position", HasSettings = true})
-AntiSec:CreateToggle({Name = "void hide", HasSettings = true})
-
-local UtilitySec = RagebotTab:CreateSection("utility", "Right")
-UtilitySec:CreateToggle({Name = "safe purchasing", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto loadout", HasSettings = true})
-UtilitySec:CreateToggle({Name = "follow target", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto stomp", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto ammo", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto armor", HasSettings = true})
-UtilitySec:CreateToggle({Name = "anti stomp", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto mask", HasSettings = true})
-UtilitySec:CreateToggle({Name = "auto heal", HasSettings = true})
-UtilitySec:CreateToggle({Name = "anti taser"})
-UtilitySec:CreateToggle({Name = "rapid fire"})
-
--- Initialize the first tab to be visible
-if MainGroup.Tabs[1] then
-    local firstTab = MainGroup.Tabs[1]
-    MyWindow.ActiveTab = firstTab
-    firstTab.Container.Visible = true
-    firstTab.Button.Color = Library.Colors.Text
-    MyWindow.TabLine.Visible = true
-    MyWindow.TabLine.Position = UDim2.new(0, 12, 0, firstTab.Button.Position.Y.Offset + 1)
-end
-
--- Toggle UI Binding (Insert Key by default)
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.Insert then
-        MyWindow.IsOpen = not MyWindow.IsOpen
-        MyWindow.MainFrame.Visible = MyWindow.IsOpen
-    end
-end)
+-- Return library so it can be called via loadstring from Github
+return Library
