@@ -83,14 +83,14 @@
     
     local themes = {
         preset = {
-            outline = rgb(10, 10, 10),
-            inline = rgb(35, 35, 35),
+            outline = rgb(5, 5, 5),
+            inline = rgb(15, 15, 15),
             text = rgb(255, 255, 255),
             text_outline = rgb(0, 0, 0),
-            background = rgb(5, 5, 5),
-            ["1"] = rgb(20, 20, 20), 
-            ["2"] = rgb(15, 15, 15),
-            ["3"] = rgb(10, 10, 10),
+            background = rgb(0, 0, 0),
+            ["1"] = rgb(10, 10, 10), 
+            ["2"] = rgb(5, 5, 5),
+            ["3"] = rgb(0, 0, 0),
         },
 
         utility = {
@@ -645,7 +645,8 @@
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(1, -4, 1, -48);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(0, 0, 0) -- Komple Siyah Tema
+                        BackgroundColor3 = rgb(0, 0, 0),
+                        Visible = false,
                     }); cfg.page = Page
                     
                     library:create("UIListLayout", {
@@ -895,7 +896,7 @@
                 fps = 0
             end
         end)
-
+        
         function library:column(properties)
             self.count += 1
 
@@ -1578,6 +1579,12 @@
                     end
                     
                     function cfg.refresh_options(list) 
+                        for _, option in next, cfg.option_instances do 
+                            option:Destroy() 
+                        end
+                        
+                        cfg.option_instances = {} 
+
                         for _, option in next, list do 
                             local button = cfg.render_option(option)
 
