@@ -1109,7 +1109,7 @@
                 -- Functions
                     function cfg.set(bool)                        
                         fill.BackgroundColor3 = bool and rgb(255, 255, 255) or themes.preset.inline
-                        fill.BackgroundTransparency = bool and 0.7 or 0[cite: 1]
+                        fill.BackgroundTransparency = bool and 0.7 or 0
 
                         flags[cfg.flag] = bool
 
@@ -1346,8 +1346,8 @@
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(0.5, 0, 1, 0);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(255, 255, 255),[cite: 1]
-                        BackgroundTransparency = 0.7[cite: 1]
+                        BackgroundColor3 = rgb(255, 255, 255),
+                        BackgroundTransparency = 0.7
                     });
                 -- 
                 
@@ -2385,8 +2385,8 @@
 
                     library:connection(uis.InputBegan, function(input, game_event) 
                         if not game_event then 
-                            local trigger_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType[cite: 1]
-                            if trigger_key == cfg.key then[cite: 1]
+                            local trigger_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
+                            if trigger_key == cfg.key then
                                 if cfg.mode == "Toggle" then 
                                     cfg.active = not cfg.active
                                     cfg.set(cfg.active)
@@ -2541,5 +2541,3 @@
         -- 
     -- 
 -- 
-
-return library, notifications
