@@ -84,7 +84,7 @@
     local themes = {
         preset = {
             outline = rgb(0, 0, 0),
-            inline = rgb(15, 15, 15),
+            inline = rgb(35, 35, 35), -- Kapalıyken belli olması için rengi biraz açtım
             text = rgb(255, 255, 255),
             text_outline = rgb(0, 0, 0),
             background = rgb(0, 0, 0),
@@ -1108,8 +1108,8 @@
                     
                 -- Functions
                     function cfg.set(bool)                        
-                        fill.BackgroundColor3 = bool and rgb(255, 255, 255) or themes.preset.inline
-                        fill.BackgroundTransparency = bool and 0.7 or 0
+                        fill.BackgroundColor3 = bool and rgb(255, 255, 255) or themes.preset.inline[cite: 1]
+                        fill.BackgroundTransparency = bool and 0.7 or 0[cite: 1]
 
                         flags[cfg.flag] = bool
 
@@ -1346,8 +1346,8 @@
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(0.5, 0, 1, 0);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(255, 255, 255),
-                        BackgroundTransparency = 0.7
+                        BackgroundColor3 = rgb(255, 255, 255),[cite: 1]
+                        BackgroundTransparency = 0.7[cite: 1]
                     });
                 -- 
                 
