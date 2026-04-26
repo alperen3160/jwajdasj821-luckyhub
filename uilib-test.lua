@@ -1,6 +1,4 @@
-if getgenv().loaded then 
-    getgenv().library:unload_menu() 
-end 
+
 
 getgenv().loaded = true 
 
