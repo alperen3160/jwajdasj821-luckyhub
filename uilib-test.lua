@@ -83,7 +83,7 @@
     
     local themes = {
         preset = {
-            outline = rgb(5, 5, 5),
+            outline = rgb(0, 0, 0),
             inline = rgb(15, 15, 15),
             text = rgb(255, 255, 255),
             text_outline = rgb(0, 0, 0),
@@ -2368,7 +2368,7 @@
                         cfg.binding = library:connection(uis.InputBegan, function(input, game_event) 
                             local key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
 
-                            if key == Enum.UserInputType.MouseButton1 then return end -- sol tık almasın (MB1 ignorelandı)[cite: 1]
+                            if key == Enum.UserInputType.MouseButton1 then return end -- MB1 ignorelandı
 
                             cfg.set(key)
 
@@ -2541,3 +2541,5 @@
         -- 
     -- 
 -- 
+
+return library, notifications
