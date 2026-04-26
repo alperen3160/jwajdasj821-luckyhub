@@ -2471,46 +2471,14 @@
                     });
                 -- 
 
-keybind_holder.MouseButton1Down:Connect(function()
-                        if cfg.binding then return end
-                        task.wait()
-                        text.Text = "..."   
-
-                        cfg.binding = library:connection(uis.InputBegan, function(input_obj, game_event)  
-                            if input_obj.UserInputType == Enum.UserInputType.MouseMovement then return end
-                            
-                            -- Mouse tuşlarını da kabul etmesi için güncellendi
-                            local key = input_obj.UserInputType == Enum.UserInputType.Keyboard and input_obj.KeyCode or input_obj.UserInputType
-                            
-                            cfg.set(key)
-
-                            cfg.binding:Disconnect() 
-                            cfg.binding = nil
-                        end)
+                -- Connections 
+                    frame.MouseButton1Click:Connect(function()
+                        cfg.callback()
                     end)
-
-                    keybind_holder.MouseButton2Down:Connect(function()
-                        if cfg.binding then return end -- Eğer tuş atanıyorsa sağ tık menüsünü açmayı engeller
-                        cfg.open = not cfg.open 
-
-                        cfg.set_visible(cfg.open) 
-                    end)
-
-                    library:connection(uis.InputBegan, function(input, game_event) 
-                        if not game_event then 
-                            local selected_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
-
-                            if selected_key == cfg.key then 
-                                if cfg.mode == "Toggle" then 
-                                    cfg.active = not cfg.active
-                                    cfg.set(cfg.active)
-                                elseif cfg.mode == "Hold" then 
-                                    cfg.set(true)
-                                end
-                            end
-                        end
-                    end)
-
+                --
+                
+                return setmetatable(cfg, library)
+            end 
 
             function library:init_config(window) 
                 local textbox;
