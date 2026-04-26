@@ -83,14 +83,14 @@
     
     local themes = {
         preset = {
-            outline = rgb(5, 5, 5),
-            inline = rgb(15, 15, 15),
+            outline = rgb(10, 10, 10),
+            inline = rgb(35, 35, 35),
             text = rgb(255, 255, 255),
             text_outline = rgb(0, 0, 0),
-            background = rgb(0, 0, 0),
-            ["1"] = rgb(10, 10, 10), 
-            ["2"] = rgb(5, 5, 5),
-            ["3"] = rgb(0, 0, 0),
+            background = rgb(5, 5, 5),
+            ["1"] = rgb(20, 20, 20), 
+            ["2"] = rgb(15, 15, 15),
+            ["3"] = rgb(10, 10, 10),
         },
 
         utility = {
@@ -645,8 +645,7 @@
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(1, -4, 1, -48);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(0, 0, 0),
-                        Visible = false,
+                        BackgroundColor3 = rgb(0, 0, 0) -- Komple Siyah Tema
                     }); cfg.page = Page
                     
                     library:create("UIListLayout", {
@@ -896,7 +895,7 @@
                 fps = 0
             end
         end)
-        
+
         function library:column(properties)
             self.count += 1
 
@@ -1109,7 +1108,7 @@
                 -- Functions
                     function cfg.set(bool)                        
                         fill.BackgroundColor3 = bool and rgb(255, 255, 255) or themes.preset.inline
-                        fill.BackgroundTransparency = bool and 0.7 or 0
+                        fill.BackgroundTransparency = bool and 0.7 or 0[cite: 1]
 
                         flags[cfg.flag] = bool
 
@@ -1346,8 +1345,9 @@
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(0.5, 0, 1, 0);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = themes.preset[tostring(self.count)]
-                    }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
+                        BackgroundColor3 = rgb(255, 255, 255),[cite: 1]
+                        BackgroundTransparency = 0.7[cite: 1]
+                    });
                 -- 
                 
                 -- Functions 
@@ -1578,12 +1578,6 @@
                     end
                     
                     function cfg.refresh_options(list) 
-                        for _, option in next, cfg.option_instances do 
-                            option:Destroy() 
-                        end
-                        
-                        cfg.option_instances = {} 
-
                         for _, option in next, list do 
                             local button = cfg.render_option(option)
 
@@ -2364,10 +2358,10 @@
                         task.wait()
                         text.Text = "..."	
 
-                        cfg.binding = library:connection(uis.InputBegan, function(input, game_event)
+                        cfg.binding = library:connection(uis.InputBegan, function(input, game_event) 
                             local key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
 
-                            if key == Enum.UserInputType.MouseButton1 then return end -- sol tık almasın (MB1 ignorelandı)
+                            if key == Enum.UserInputType.MouseButton1 then return end -- sol tık almasın (MB1 ignorelandı)[cite: 1]
 
                             cfg.set(key)
 
@@ -2384,8 +2378,8 @@
 
                     library:connection(uis.InputBegan, function(input, game_event) 
                         if not game_event then 
-                            local trigger_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
-                            if trigger_key == cfg.key then 
+                            local trigger_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType[cite: 1]
+                            if trigger_key == cfg.key then[cite: 1]
                                 if cfg.mode == "Toggle" then 
                                     cfg.active = not cfg.active
                                     cfg.set(cfg.active)
