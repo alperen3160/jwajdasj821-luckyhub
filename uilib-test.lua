@@ -83,14 +83,14 @@
     
     local themes = {
         preset = {
-            outline = rgb(10, 10, 10),
-            inline = rgb(35, 35, 35),
+            outline = rgb(5, 5, 5),
+            inline = rgb(15, 15, 15),
             text = rgb(255, 255, 255),
             text_outline = rgb(0, 0, 0),
-            background = rgb(5, 5, 5),
-            ["1"] = rgb(20, 20, 20), 
-            ["2"] = rgb(15, 15, 15),
-            ["3"] = rgb(10, 10, 10),
+            background = rgb(0, 0, 0),
+            ["1"] = rgb(10, 10, 10), 
+            ["2"] = rgb(5, 5, 5),
+            ["3"] = rgb(0, 0, 0),
         },
 
         utility = {
@@ -897,15 +897,6 @@
             end
         end)
         
-        --[[
-        	local pingTimeSec = game.Players.LocalPlayer:GetNetworkPing()
-	local pingTimeMs = pingTimeSec * 1000
-	pingLabel.Text = "Ping: " .. tostring(math.floor(pingTimeMs)) .. "ms"
-
-	local realFPS = workspace:GetRealPhysicsFPS()
-	fpsLabel.Text = "FPS: " .. tostring(math.floor(realFPS))
-        ]]
-
         function library:column(properties)
             self.count += 1
 
@@ -1117,7 +1108,8 @@
                     
                 -- Functions
                     function cfg.set(bool)                        
-                        fill.BackgroundColor3 = bool and themes.preset[tostring(self.count)] or themes.preset.inline
+                        fill.BackgroundColor3 = bool and rgb(255, 255, 255) or themes.preset.inline
+                        fill.BackgroundTransparency = bool and 0.7 or 0
 
                         flags[cfg.flag] = bool
 
@@ -2372,8 +2364,12 @@
                         task.wait()
                         text.Text = "..."	
 
-                        cfg.binding = library:connection(uis.InputBegan, function(keycode, game_event)  
-                            cfg.set(keycode.KeyCode)
+                        cfg.binding = library:connection(uis.InputBegan, function(input, game_event)
+                            local key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
+
+                            if key == Enum.UserInputType.MouseButton1 then return end -- sol tık almasın (MB1 ignorelandı)
+
+                            cfg.set(key)
 
                             cfg.binding:Disconnect() 
                             cfg.binding = nil
@@ -2388,7 +2384,8 @@
 
                     library:connection(uis.InputBegan, function(input, game_event) 
                         if not game_event then 
-                            if input.KeyCode == cfg.key then 
+                            local trigger_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
+                            if trigger_key == cfg.key then 
                                 if cfg.mode == "Toggle" then 
                                     cfg.active = not cfg.active
                                     cfg.set(cfg.active)
