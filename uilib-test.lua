@@ -1,6 +1,5 @@
-
-
-getgenv().loaded = true 
+-- Hi finobe here, this got leaked cuz i had a polish nazi (??) customer who tried leaking personal info about me for whatever reason??
+-- Anyways I fixed the code up so if you're using the other one on my github then use this one instead
 
 -- Variables 
     local uis = game:GetService("UserInputService") 
@@ -64,7 +63,7 @@ getgenv().loaded = true
 
 -- Library init
     getgenv().library = {
-        directory = "Luckyhub - .sparky9971",
+        directory = "priv9",
         folders = {
             "/fonts",
             "/configs",
@@ -82,7 +81,7 @@ getgenv().loaded = true
         gui; 
     }
     
-local themes = {
+    local themes = {
         preset = {
             outline = rgb(10, 10, 10),
             inline = rgb(35, 35, 35),
@@ -217,8 +216,8 @@ local themes = {
                 return getcustomasset(Name .. ".font");
             end
             
-            local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
-                Id = "ProggyTiny.ttf",
+            local ProggyTiny = Register_Font("Tahoma", 200, "Normal", {
+                Id = "Tahoma.ttf",
                 Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
             })
 
@@ -527,8 +526,8 @@ local themes = {
     -- Library element functions
         function library:window(properties)
             local cfg = {
-                name = properties.name or properties.Name or "fijihack.panda",
-                size = properties.size or properties.Size or dim2(0, 460, 0, 362), 
+                name = properties.name or properties.Name or "priv9",
+                size = properties.size or properties.Size or dim2(0, 600, 0, 400), 
                 selected_tab 
             }
 
@@ -608,6 +607,10 @@ local themes = {
                     VerticalFlex = Enum.UIFlexAlignment.Fill
                 });
             --
+
+            function cfg.toggle_menu(bool) 
+                window_outline.Visible = bool 
+            end
 
             return setmetatable(cfg, library)
         end 
@@ -860,7 +863,7 @@ local themes = {
                     BackgroundColor3 = rgb(255, 255, 255)
                 }); 
                 
-                library:create("UIGradient", {
+                library.watermark_gradient = library:create("UIGradient", {
                     Color = rgbseq{
                         rgbkey(0, themes.preset["1"]), 
                         rgbkey(0.5, themes.preset["2"]),
@@ -947,8 +950,8 @@ local themes = {
                     ClipsDescendants = true;
                     BorderColor3 = rgb(0, 0, 0);
                     BorderSizePixel = 0;
-                    BackgroundColor3 = self.color
-                }); library:apply_theme(fill, tostring(self.count), "BackgroundColor3");
+                    BackgroundColor3 = themes.preset[tostring(self.count)]
+                }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3");
 
                 local dark = library:create("Frame", {
                     Parent = accent;
@@ -1021,7 +1024,7 @@ local themes = {
                 local cfg = {
                     enabled = options.enabled or nil,
                     name = options.name or "Toggle",
-                    flag = options.flag or tostring(random(1,9999999)),
+                    flag = options.flag or options.name or "Flag",
                     
                     default = options.default or false,
                     folding = options.folding or false, 
@@ -1066,7 +1069,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(0, 12, 0, 12);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3");    
                         
                         local fill = library:create("Frame", {
@@ -1075,7 +1078,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(1, -2, 1, -2);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(fill, tostring(self.count), "BackgroundColor3");                
 
                         library:create("UIListLayout", {
@@ -1152,7 +1155,7 @@ local themes = {
             
                     option_instances = {}, 
                     current_instance = nil, 
-                    flag = options.flag or "SET A FLAG U NIGGER", 
+                    flag = options.flag or "flag", 
                 }
 
                 -- Elements
@@ -1164,7 +1167,7 @@ local themes = {
                         Size = dim2(1, 0, 0, cfg.scale);
                         BorderSizePixel = 0;
                         AutomaticSize = Enum.AutomaticSize.Y;
-                        BackgroundColor3 = self.color
+                        BackgroundColor3 = themes.preset[tostring(self.count)]
                     }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
                     
                     local inline = library:create("Frame", {
@@ -1286,7 +1289,7 @@ local themes = {
                 local cfg = {
                     name = options.name or nil,
                     suffix = options.suffix or "",
-                    flag = options.flag or tostring(2^789),
+                    flag = options.flag or options.name or "Flag",
                     callback = options.callback or function() end, 
     
                     min = options.min or options.minimum or 0,
@@ -1334,7 +1337,7 @@ local themes = {
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(1, 0, 0, 12);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = self.color
+                        BackgroundColor3 = themes.preset[tostring(self.count)]
                     }); library:apply_theme(outline, tostring(self.count), "BackgroundColor3")
                     
                     local inline = library:create("Frame", {
@@ -1351,7 +1354,7 @@ local themes = {
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(0.5, 0, 1, 0);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = self.color
+                        BackgroundColor3 = themes.preset[tostring(self.count)]
                     }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
                 -- 
                 
@@ -1407,7 +1410,7 @@ local themes = {
             function library:dropdown(options) 
                 local cfg = {
                     name = options.name or nil,
-                    flag = options.flag or tostring(random(1,9999999)),
+                    flag = options.flag or options.name or "Flag",
                     items = options.items or {""},
                     callback = options.callback or function() end,
                     multi = options.multi or false, 
@@ -1444,7 +1447,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(0.5, 0, 0, 16);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(dropdown_holder, tostring(self.count), "BackgroundColor3")
                         
                         local inline = library:create("Frame", {
@@ -1497,7 +1500,7 @@ local themes = {
                             BorderSizePixel = 0;
                             Visible = false;
                             AutomaticSize = Enum.AutomaticSize.Y;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         });	library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
 
                         local inline = library:create("Frame", {
@@ -1648,7 +1651,7 @@ local themes = {
             function library:colorpicker(options) 
                 local cfg = {
                     name = options.name or "Color", 
-                    flag = options.flag or tostring(2^789),
+                    flag = options.flag or options.name or "Flag",
 
                     color = options.color or color(1, 1, 1), -- Default to white color if not provided
                     alpha = options.alpha and 1 - options.alpha or 0,
@@ -1677,7 +1680,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(0, 30, 0, 12);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
                         
                         local colorpicker_element_color = library:create("Frame", {
@@ -1715,7 +1718,7 @@ local themes = {
                             Visible = false;
                             Size = dim2(0, 150, 0, 150);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         });	library:apply_theme(colorpicker, tostring(self.count), "BackgroundColor3")
 
                         local a = library:create("Frame", {
@@ -1723,7 +1726,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(1, 0, 1, 0);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(a, tostring(self.count), "BackgroundColor3")
                         
                         local e = library:create("Frame", {
@@ -1751,7 +1754,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(1, -1, 0, 16);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         }); library:apply_theme(textbox_holder, tostring(self.count), "BackgroundColor3")
                         
                         local textbox = library:create("TextBox", {
@@ -2053,7 +2056,7 @@ local themes = {
                     name = options.name or "...",
                     placeholder = options.placeholder or options.placeholdertext or options.holder or options.holdertext or "type here...",
                     default = options.default,
-                    flag = options.flag or "SET ME NIGGA",
+                    flag = options.flag or options.name or "Flag",
                     callback = options.callback or function() end,
                     visible = options.visible or true,
                 }
@@ -2068,7 +2071,7 @@ local themes = {
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(1, 0, 0, 16);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = self.color
+                        BackgroundColor3 = themes.preset[tostring(self.count)]
                     }); library:apply_theme(frame, tostring(self.count), "BackgroundColor3")
                     
                     local frame_inline = library:create("Frame", {
@@ -2086,6 +2089,7 @@ local themes = {
                         FontFace = fonts["ProggyClean"],
                         TextTruncate = Enum.TextTruncate.AtEnd,
                         TextSize = 12,
+                        Text = "",
                         Size = dim2(1, -6, 1, 0),
                         RichText = true,
                         TextColor3 = rgb(255, 255, 255),
@@ -2124,10 +2128,9 @@ local themes = {
                 return setmetatable(cfg, library)
             end 
 
-           
             function library:keybind(options) 
                 local cfg = {
-                    flag = options.flag or "SET ME A FLAG NOWWW!!!!",
+                    flag = options.flag or options.name or "Flag",
                     callback = options.callback or function() end,
                     open = false,
                     binding = nil, 
@@ -2163,8 +2166,8 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             Size = dim2(0.5, 0, 0, 16);
                             BorderSizePixel = 0;
-                            BackgroundColor3 = self.color
-                        }); library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
+                        }); library:apply_theme(keybind_holder, tostring(self.count), "BackgroundColor3")
                         
                         local inline = library:create("Frame", {
                             Parent = keybind_holder;
@@ -2216,7 +2219,7 @@ local themes = {
                             BorderColor3 = rgb(0, 0, 0);
                             BorderSizePixel = 0;
                             AutomaticSize = Enum.AutomaticSize.Y;
-                            BackgroundColor3 = self.color
+                            BackgroundColor3 = themes.preset[tostring(self.count)]
                         });	library:apply_theme(accent, tostring(self.count), "BackgroundColor3")
 
                         local inline = library:create("Frame", {
@@ -2365,18 +2368,12 @@ local themes = {
                 -- 
 
                 -- Connections
-keybind_holder.MouseButton1Down:Connect(function()
-                        if cfg.binding then return end
+                    keybind_holder.MouseButton1Down:Connect(function()
                         task.wait()
-                        text.Text = "..."   
+                        text.Text = "..."	
 
-                        cfg.binding = library:connection(uis.InputBegan, function(input_obj, game_event)  
-                            if input_obj.UserInputType == Enum.UserInputType.MouseMovement then return end
-                            
-                            -- Mouse tuşlarını da kabul etmesi için güncellendi
-                            local key = input_obj.UserInputType == Enum.UserInputType.Keyboard and input_obj.KeyCode or input_obj.UserInputType
-                            
-                            cfg.set(key)
+                        cfg.binding = library:connection(uis.InputBegan, function(keycode, game_event)  
+                            cfg.set(keycode.KeyCode)
 
                             cfg.binding:Disconnect() 
                             cfg.binding = nil
@@ -2384,7 +2381,6 @@ keybind_holder.MouseButton1Down:Connect(function()
                     end)
 
                     keybind_holder.MouseButton2Down:Connect(function()
-                        if cfg.binding then return end -- Eğer tuş atanıyorsa sağ tık menüsünü açmayı engeller
                         cfg.open = not cfg.open 
 
                         cfg.set_visible(cfg.open) 
@@ -2392,9 +2388,7 @@ keybind_holder.MouseButton1Down:Connect(function()
 
                     library:connection(uis.InputBegan, function(input, game_event) 
                         if not game_event then 
-                            local selected_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
-
-                            if selected_key == cfg.key then 
+                            if input.KeyCode == cfg.key then 
                                 if cfg.mode == "Toggle" then 
                                     cfg.active = not cfg.active
                                     cfg.set(cfg.active)
@@ -2404,7 +2398,8 @@ keybind_holder.MouseButton1Down:Connect(function()
                             end
                         end
                     end)
-                 library:connection(uis.InputEnded, function(input, game_event) 
+
+                    library:connection(uis.InputEnded, function(input, game_event) 
                         if game_event then 
                             return 
                         end 
@@ -2448,7 +2443,7 @@ keybind_holder.MouseButton1Down:Connect(function()
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(1, 0, 0, 16);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = self.color
+                        BackgroundColor3 = themes.preset[tostring(self.count)]
                     }); library:apply_theme(frame, tostring(self.count), "BackgroundColor3")
                     
                     local frame_inline = library:create("Frame", {
@@ -2476,14 +2471,109 @@ keybind_holder.MouseButton1Down:Connect(function()
                     });
                 -- 
 
-                -- Connections 
-                    frame.MouseButton1Click:Connect(function()
-                        cfg.callback()
+keybind_holder.MouseButton1Down:Connect(function()
+                        if cfg.binding then return end
+                        task.wait()
+                        text.Text = "..."   
+
+                        cfg.binding = library:connection(uis.InputBegan, function(input_obj, game_event)  
+                            if input_obj.UserInputType == Enum.UserInputType.MouseMovement then return end
+                            
+                            -- Mouse tuşlarını da kabul etmesi için güncellendi
+                            local key = input_obj.UserInputType == Enum.UserInputType.Keyboard and input_obj.KeyCode or input_obj.UserInputType
+                            
+                            cfg.set(key)
+
+                            cfg.binding:Disconnect() 
+                            cfg.binding = nil
+                        end)
                     end)
-                --
-                
-                return setmetatable(cfg, library)
-            end 
+
+                    keybind_holder.MouseButton2Down:Connect(function()
+                        if cfg.binding then return end -- Eğer tuş atanıyorsa sağ tık menüsünü açmayı engeller
+                        cfg.open = not cfg.open 
+
+                        cfg.set_visible(cfg.open) 
+                    end)
+
+                    library:connection(uis.InputBegan, function(input, game_event) 
+                        if not game_event then 
+                            local selected_key = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode or input.UserInputType
+
+                            if selected_key == cfg.key then 
+                                if cfg.mode == "Toggle" then 
+                                    cfg.active = not cfg.active
+                                    cfg.set(cfg.active)
+                                elseif cfg.mode == "Hold" then 
+                                    cfg.set(true)
+                                end
+                            end
+                        end
+                    end)
+
+
+            function library:init_config(window) 
+                local textbox;
+                local main = window:tab({name = "Configs"})
+                local section = main:column({}):section({name = "Settings", size = 1, default = true})
+                config_holder = section:dropdown({name = "Configs", options = {"Report", "This", "Error", "To", "Finobe"}, callback = function(option) if textbox then textbox.set(option) end end, flag = "config_name_list"}); library:update_config_list()
+                textbox = section:textbox({name = "Config name:", flag = "config_name_text"})
+                section:button({name = "Save", callback = function() writefile(library.directory .. "/configs/" .. flags["config_name_text"] .. ".cfg", library:get_config()) library:update_config_list() end}) 
+                section:button({name = "Load", callback = function() library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_text"] .. ".cfg"))  library:update_config_list() end})
+                section:button({name = "Delete", callback = function() delfile(library.directory .. "/configs/" .. flags["config_name_text"] .. ".cfg")  library:update_config_list() end})
+
+                local section = main:column({}):section({name = "Other", size = 1, default = true})
+                section:keybind({name = "Menu bind", callback = function(bool) window.toggle_menu(bool) end, default = true})
+                section:colorpicker({name = "Gradient 1", callback = function(color)                    
+                    library:update_theme("1", color)
+
+                    library.gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+
+                    library.watermark_gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+                end, color = themes.preset["1"]})
+                section:colorpicker({name = "Gradient 2", callback = function(color)
+                    library:update_theme("2", color)
+
+                    library.gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+
+                    library.watermark_gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+                end, color = themes.preset["2"]})
+                section:colorpicker({name = "Gradient 3", callback = function(color)
+                    library:update_theme("3", color)
+
+                    library.gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+
+                    library.watermark_gradient.Color = rgbseq{
+                        rgbkey(0, themes.preset["1"]), 
+                        rgbkey(0.5, themes.preset["2"]),
+                        rgbkey(1, themes.preset["3"]),
+                    };
+                end, color = themes.preset["3"]})
+
+                main:column({})
+            end
         -- 
     -- 
 -- 
+
+return library, notifications
